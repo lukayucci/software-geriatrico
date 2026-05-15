@@ -64,10 +64,10 @@ mongoose.connect(MONGO_URI)
         const adminExiste = await Usuario.findOne({ user: 'admin' });
         if (!adminExiste) {
             await Usuario.create({
-                nombre: 'Dr. Rodriguez',
+                nombre: 'Daniela Yucci',
                 user: 'admin',
                 rol: 'admin',
-                password: 'medico123'
+                password: 'admin123'
             });
             console.log('usuario admin por defecto creado');
         }
