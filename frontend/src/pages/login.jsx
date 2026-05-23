@@ -18,7 +18,7 @@ function Login() {
   try {
     console.log('Enviando datos:', { nombre, password });
     // Mandamos los nombres de propiedades EXACTOS que pide tu servidor
-    const respuesta = await axios.post('http://localhost:5000/api/login', {
+    const respuesta = await axios.post('https://software-geriatrico-production.up.railway.app/api/login', {
       nombre: nombre,
       password: password
     });
