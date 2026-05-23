@@ -1,6 +1,6 @@
 async function run() {
   try {
-    const loginRes = await fetch('http://software-geriatrico-production.up.railway.app/api/login', {
+    const loginRes = await fetch('https://software-geriatrico-production.up.railway.app/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre: 'admin', password: 'medico123' })
@@ -9,7 +9,7 @@ async function run() {
     const token = loginData.token;
     console.log('token:', token ? 'ok' : 'missing');
 
-    const residentesRes = await fetch('http://software-geriatrico-production.up.railway.app/api/residentes', {
+    const residentesRes = await fetch('https://software-geriatrico-production.up.railway.app/api/residentes', {
       headers: { authorization: token }
     });
     const residentes = await residentesRes.json();
@@ -20,7 +20,7 @@ async function run() {
     }
     console.log('Resident id:', residente._id);
 
-    const evolutionRes = await fetch(`http://software-geriatrico-production.up.railway.app/api/residentes/${residente._id}/evoluciones`, {
+    const evolutionRes = await fetch(`https://software-geriatrico-production.up.railway.app/api/residentes/${residente._id}/evoluciones`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', authorization: token },
       body: JSON.stringify({ categoria: 'incidente', nota: 'Test incident note' })
@@ -28,7 +28,7 @@ async function run() {
     const evolutionData = await evolutionRes.json();
     console.log('Post evolution status:', evolutionRes.status, evolutionData.message || JSON.stringify(evolutionData));
 
-    const updatedRes = await fetch('http://software-geriatrico-production.up.railway.app/api/residentes', {
+    const updatedRes = await fetch('https://software-geriatrico-production.up.railway.app/api/residentes', {
       headers: { authorization: token }
     });
     const updated = await updatedRes.json();

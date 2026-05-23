@@ -43,7 +43,7 @@ function Dashboard() {
     const traerDatos = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://software-geriatrico-production.up.railway.app/api/residentes', {
+        const res = await axios.get('https://software-geriatrico-production.up.railway.app/api/residentes', {
           headers: { 'authorization': token }
         });
         setResidentes(res.data);
@@ -74,7 +74,7 @@ function Dashboard() {
   const manejarAgregar = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://software-geriatrico-production.up.railway.app/api/residentes', nuevoResidente, {
+      const res = await axios.post('https://software-geriatrico-production.up.railway.app/api/residentes', nuevoResidente, {
         headers: { 'authorization': token }
       });
 
@@ -102,7 +102,7 @@ function Dashboard() {
   const eliminarResidente = async (id) => {
     if (window.confirm('¿Estás seguro que quieres eliminar este residente?')) {
       try {
-        await axios.delete(`http://software-geriatrico-production.up.railway.app/api/residentes/${id}`, {
+        await axios.delete(`https://software-geriatrico-production.up.railway.app/api/residentes/${id}`, {
           headers: { 'authorization': token }
         });
         setResidentes(prev => prev.filter(r => r._id !== id));
@@ -117,7 +117,7 @@ function Dashboard() {
   // Traer la lista de usuarios (solo si es médico/admin)
 const traerUsuarios = async () => {
     try {
-        const res = await axios.get('http://software-geriatrico-production.up.railway.app/api/usuarios', {
+        const res = await axios.get('https://software-geriatrico-production.up.railway.app/api/usuarios', {
             headers: { 'authorization': token }
         });
         setUsuarios(res.data);
@@ -136,7 +136,7 @@ const traerUsuarios = async () => {
         }
 
         try {
-            await axios.post('http://software-geriatrico-production.up.railway.app/api/usuarios', nuevoUsuario, {
+            await axios.post('https://software-geriatrico-production.up.railway.app/api/usuarios', nuevoUsuario, {
                 headers: { 'authorization': token }
             });
             alert("Usuario creado con éxito");
@@ -154,7 +154,7 @@ const traerUsuarios = async () => {
   const eliminarUsuario = async (id) => {
       if (window.confirm("¿Seguro que quieres eliminar a este usuario?")) {
           try {
-                await axios.delete(`http://software-geriatrico-production.up.railway.app/api/usuarios/${id}`, {
+                await axios.delete(`https://software-geriatrico-production.up.railway.app/api/usuarios/${id}`, {
                   headers: { 'authorization': token }
               });
               traerUsuarios();
@@ -170,7 +170,7 @@ const traerUsuarios = async () => {
 
     try {
       const res = await axios.post(
-        `http://software-geriatrico-production.up.railway.app/api/residentes/${residenteHistorial._id}/evoluciones`, nuevaNota, { headers: { 'authorization': token } }
+        `https://software-geriatrico-production.up.railway.app/api/residentes/${residenteHistorial._id}/evoluciones`, nuevaNota, { headers: { 'authorization': token } }
       );
 
       setResidentes(prev => prev.map(r => r._id === residenteHistorial._id ? res.data.residente : r));
@@ -186,7 +186,7 @@ const traerUsuarios = async () => {
     e.preventDefault();
     try {
       const res = await axios.put(
-        `http://software-geriatrico-production.up.railway.app/api/residentes/${residenteEnEdicion._id}`, 
+        `https://software-geriatrico-production.up.railway.app/api/residentes/${residenteEnEdicion._id}`, 
         residenteEnEdicion, 
         { headers: { 'authorization': token } }
       );
