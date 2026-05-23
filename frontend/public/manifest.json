@@ -1,14 +1,14 @@
 {
   "short_name": "Geriatrico",
-  "name": "Sistema Geriátrico",
+  "name": "Instituto Geriátrico de Los Santos",
   "icons": [
     {
-      "src": "/logo192.png",
+      "src": "/logo192.png.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/logo512.png",
+      "src": "/logo512.png.png",
       "type": "image/png",
       "sizes": "512x512"
     }
