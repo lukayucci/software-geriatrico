@@ -127,7 +127,7 @@ const verificarToken = (req, res, next) => {
 };
 
 // PONER ESTA RUTA BIEN ARRIBA, DEBAJO DE LOS MIDDLEWARES
-app.post('/api/test-ruta', (req, res) => {
+app.get('/api/test-ruta', (req, res) => {
     console.log("¡TEST EXITOSO!");
     res.send("El servidor recibe señales");
 });
