@@ -20,7 +20,7 @@ function Dashboard() {
   const [residenteEnEdicion, setResidenteEnEdicion] = useState(null);
   const [busqueda, setBusqueda] = useState("");
   const [usuarios, setUsuarios] = useState([]);
-  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', user: '', rol: 'asistente', password: '' });
+  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', user: '', rol: 'licenfermeria', password: '' });
   const [mostrarLista, setMostrarLista] = useState(true);
   const [mostrarUsuarios, setMostrarUsuarios] = useState(false);
   const [residenteHistorial, setResidenteHistorial] = useState(null); // abre el modal del lápiz para agregar la nota
@@ -29,6 +29,11 @@ function Dashboard() {
   const navigate = useNavigate();
   const rol = localStorage.getItem('rol');
   const token = localStorage.getItem('token');
+  const puedeAgregarNota = [
+    'admin', 'medico', 'lickinesiologia', 'licterapiaocupacional',
+    'licpsicologia', 'lictrabajosocial', 'licnutricion', 'edfisica',
+    'draclinica', 'licenfermeria', 'dragerontologa', 'enfermeroprofesional'
+  ].includes(rol);
 
   useEffect(() => {
     if (!token) {
@@ -123,18 +128,26 @@ const traerUsuarios = async () => {
 
 // Crear usuario nuevo
   const manejarAgregarUsuario = async (e) => {
-      e.preventDefault();
-      try {
-          await axios.post('http://localhost:5000/api/usuarios', nuevoUsuario, {
-              headers: { 'authorization': token }
-          });
-          alert("Usuario creado con éxito");
-          setNuevoUsuario({ nombre: '', user: '', password: '', rol: 'asistente' });
-          traerUsuarios(); // Refrescamos la lista
-      } catch (err) {
-          console.error('Error al crear usuario:', err.response?.data || err.message || err);
-          alert(err.response?.data?.message || "Error al crear usuario");
-      }
+    e.preventDefault();
+    
+        // Verificación de seguridad antes de enviar
+        if (!nuevoUsuario.nombre || !nuevoUsuario.user || !nuevoUsuario.password || !nuevoUsuario.rol) {
+            return alert("Por favor, completa todos los campos.");
+        }
+
+        try {
+            await axios.post('http://localhost:5000/api/usuarios', nuevoUsuario, {
+                headers: { 'authorization': token }
+            });
+            alert("Usuario creado con éxito");
+            setNuevoUsuario({ nombre: '', user: '', password: '', rol: 'lic-enfermeria' });
+            traerUsuarios();
+        } catch (err) {
+            // Esto captura el error real que viene del servidor
+            const mensaje = err.response?.data?.message || "Error al crear usuario";
+            console.error('Error detallado:', err.response?.data);
+            alert(mensaje);
+        }
   };
 
   // Eliminar usuario
@@ -303,50 +316,55 @@ const traerUsuarios = async () => {
     doc.save(`FICHA_EMERGENCIA_${res.apellido.toUpperCase()}.pdf`);
   };
 
+  const traducirRol = (rol) => {
+  const diccionario = {
+    'lickinesiologia': 'Lic. en Kinesiología',
+    'licterapiaocupacional': 'Lic. en Terapia Ocupacional',
+    'licpsicologia': 'Lic. en Psicología',
+    'lictrabajo-social': 'Lic. en Trabajo Social',
+    'licnutricion': 'Lic. en Nutrición',
+    'edfisica': 'Ed. Física',
+    'draclinica': 'Dra. Clínica',
+    'licenfermeria': 'Lic. en Enfermería',
+    'dragerontologa': 'Dra. Gerontóloga',
+    'enfermeroprofesional': 'Enfermero/a Profesional',
+    'medico': 'Médico',
+    'admin': 'Administrativo'
+  };
+  return diccionario[rol] || rol; // Si no encuentra el rol, devuelve el texto original
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 p-8 font-sans text-slate-800">
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-8 border border-slate-200">
+    <div className="min-h-screen bg-slate-100 p-4 sm:p-8 font-sans text-slate-800">
+      
+      {/* HEADER RESPONSIVE */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-6 sm:mb-8 border border-slate-200 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Panel Geriátrico</h1>
-          <p className="text-emerald-600 font-medium mt-1">Conectado como: <span className="uppercase">{rol}</span></p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Panel Geriátrico</h1>
+          <p className="text-emerald-600 font-medium mt-1">Conectado como: <span className="uppercase">{rol || 'Invitado'}</span></p>
         </div>
-        <div className="flex flex-col md:flex-row gap-4 mt-4 md:mt-0">
-          {(rol === 'medico' || rol === 'admin') && (
-            <>
-              <button 
-                onClick={toggleLista}
-                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all font-medium flex items-center gap-2"
-              >
-                📋 Lista de Residentes
-              </button>
-              <button 
-                onClick={toggleUsuarios}
-                className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all font-medium flex items-center gap-2"
-              >
-                👥 Gestión de Personal
-              </button>
-            </>
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <button onClick={toggleLista} className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all font-medium flex items-center justify-center gap-2">
+            📋 Lista de Residentes
+          </button>
+          {rol === 'admin' && (
+            <button onClick={toggleUsuarios} className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all font-medium flex items-center justify-center gap-2">
+              👥 Gestión de Personal
+            </button>
           )}
-          <button 
-            onClick={cerrarSesion} 
-            className="px-6 py-2 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-200"
-          >
+          <button onClick={cerrarSesion} className="w-full sm:w-auto px-6 py-2 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-200">
             Cerrar Sesión
           </button>
         </div>
       </header>
 
-      {/* FORMULARIO DE INGRESO (SOLO MÉDICO/ADMIN - SIEMPRE VISIBLE) */}
-      {(rol === 'medico' || rol === 'admin') && (
-        <div className="bg-white p-8 mb-8 rounded-2xl shadow-sm border border-slate-200">
-          <h3 className="text-2xl font-bold mb-6 text-slate-900">Registrar Nuevo Ingreso</h3>
-          
-          <form onSubmit={manejarAgregar} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            
-            {/* SECCIÓN 1: IDENTIDAD */}
-            <h4 className={sectionTitleClass}>Identidad y Demografía</h4>
-            
+      {/* FORMULARIO DE INGRESO */}
+      {rol === 'admin' && (
+        <div className="bg-white p-5 sm:p-8 mb-8 rounded-2xl shadow-sm border border-slate-200">
+          <h3 className="text-xl sm:text-2xl font-bold mb-6 text-slate-900">Registrar Nuevo Ingreso</h3>
+          <form onSubmit={manejarAgregar} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            {/* IDENTIDAD */}
+            <h4 className={`col-span-full ${sectionTitleClass}`}>Identidad y Demografía</h4>
             <div><label className={labelClass}>Nombre</label><input className={inputClass} value={nuevoResidente.nombre} onChange={(e) => setNuevoResidente({...nuevoResidente, nombre: e.target.value})} required /></div>
             <div><label className={labelClass}>Apellido</label><input className={inputClass} value={nuevoResidente.apellido} onChange={(e) => setNuevoResidente({...nuevoResidente, apellido: e.target.value})} required /></div>
             <div><label className={labelClass}>DNI</label><input type="number" className={inputClass} value={nuevoResidente.dni} onChange={(e) => setNuevoResidente({...nuevoResidente, dni: e.target.value})} /></div>
@@ -354,9 +372,8 @@ const traerUsuarios = async () => {
             <div><label className={labelClass}>Nacionalidad</label><input className={inputClass} value={nuevoResidente.nacionalidad} onChange={(e) => setNuevoResidente({...nuevoResidente, nacionalidad: e.target.value})} /></div>
             <div><label className={labelClass}>Fecha Nacimiento</label><input type="date" className={inputClass} value={nuevoResidente.nacimiento} onChange={(e) => setNuevoResidente({...nuevoResidente, nacimiento: e.target.value})} /></div>
 
-            {/* SECCIÓN 2: SALUD Y COBERTURA */}
-            <h4 className={sectionTitleClass}>Salud y Cobertura</h4>
-            
+            {/* SALUD */}
+            <h4 className={`col-span-full mt-4 ${sectionTitleClass}`}>Salud y Cobertura</h4>
             <div><label className={labelClass}>Estado</label><input className={inputClass} value={nuevoResidente.estado} onChange={(e) => setNuevoResidente({...nuevoResidente, estado: e.target.value})} /></div>
             <div><label className={labelClass}>Habitación</label><input className={inputClass} value={nuevoResidente.habitacion} onChange={(e) => setNuevoResidente({...nuevoResidente, habitacion: e.target.value})} /></div>
             <div><label className={labelClass}>Fecha de Ingreso</label><input type="date" className={inputClass} value={nuevoResidente.fechaIngreso} onChange={(e) => setNuevoResidente({...nuevoResidente, fechaIngreso: e.target.value})} /></div>
@@ -365,23 +382,22 @@ const traerUsuarios = async () => {
             <div><label className={labelClass}>Médico Cabecera</label><input className={inputClass} value={nuevoResidente.medicoCabecera} onChange={(e) => setNuevoResidente({...nuevoResidente, medicoCabecera: e.target.value})} /></div>
             <div><label className={labelClass}>Hospital Capitado</label><input className={inputClass} value={nuevoResidente.hospitalCapitado} onChange={(e) => setNuevoResidente({...nuevoResidente, hospitalCapitado: e.target.value})} /></div>
             
-            <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div><label className={labelClass}>Medicación</label><textarea className={`${inputClass} h-24 resize-none`} value={nuevoResidente.medicacion} onChange={(e) => setNuevoResidente({...nuevoResidente, medicacion: e.target.value})} /></div>
               <div><label className={labelClass}>Antecedentes</label><textarea className={`${inputClass} h-24 resize-none`} value={nuevoResidente.antecedentes} onChange={(e) => setNuevoResidente({...nuevoResidente, antecedentes: e.target.value})} /></div>
             </div>
             <div className="col-span-full"><label className={labelClass}>Factores de Riesgo</label><input className={inputClass} value={nuevoResidente.factoresRiesgo} onChange={(e) => setNuevoResidente({...nuevoResidente, factoresRiesgo: e.target.value})} /></div>
 
-            {/* SECCIÓN 3: CONTACTOS */}
-            <h4 className={sectionTitleClass}>Contactos y Apoderados</h4>
+            {/* CONTACTOS */}
+            <h4 className={`col-span-full mt-4 ${sectionTitleClass}`}>Contactos y Apoderados</h4>
+            <div className="col-span-full md:col-span-1"><label className={labelClass}>Tel. Emergencia</label><input className={inputClass} value={nuevoResidente.telEmergencia} onChange={(e) => setNuevoResidente({...nuevoResidente, telEmergencia: e.target.value})} /></div>
             
-            <div><label className={labelClass}>Tel. Emergencia</label><input className={inputClass} value={nuevoResidente.telEmergencia} onChange={(e) => setNuevoResidente({...nuevoResidente, telEmergencia: e.target.value})} /></div>
-            <div className="hidden xl:block"></div><div className="hidden xl:block"></div> {/* Espaciadores */}
+            <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>1° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.primerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, primerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionPrimerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionPrimerApoderado: e.target.value})} /></div>
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>2° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.segundoApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, segundoApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telSegundoApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telSegundoApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionSegundoApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionSegundoApoderado: e.target.value})} /></div>
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>3° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.tercerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, tercerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telTercerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telTercerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionTercerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionTercerApoderado: e.target.value})} /></div>
+            </div>
 
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>1° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.primerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, primerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionPrimerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionPrimerApoderado: e.target.value})} /></div>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>2° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.segundoApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, segundoApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telSegundoApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telSegundoApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionSegundoApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionSegundoApoderado: e.target.value})} /></div>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>3° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.tercerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, tercerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telTercerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telTercerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionTercerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionTercerApoderado: e.target.value})} /></div>
-
-            {/* BOTÓN SUBMIT */}
             <div className="col-span-full mt-4">
               <button type="submit" className="w-full md:w-auto px-8 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all">
                 + Guardar Residente
@@ -396,65 +412,121 @@ const traerUsuarios = async () => {
         <div id="lista-seccion" className="animate-in fade-in duration-300">
           <div className="mb-6 relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-slate-400">🔍</span>
+              <span className="text-slate-400">🔍</span>
             </div>
             <input
-                type="text"
-                placeholder="Buscar por nombre, apellido o DNI..."
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+              type="text"
+              placeholder="Buscar por nombre, apellido o DNI..."
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
 
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+          <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
             <h4 className="text-2xl font-bold mb-6 text-slate-900">Listado de Residentes</h4>
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="p-4 font-semibold text-slate-600">Nombre Completo</th>
-                  <th className="p-4 font-semibold text-slate-600">Habitación</th>
-                  <th className="p-4 font-semibold text-slate-600">Estado</th>
-                  <th className="p-4 font-semibold text-slate-600 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {residentesFiltrados.map(r => (
-                  <tr key={r._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="p-4 font-medium text-slate-800">{r.nombre} {r.apellido}</td>
-                    <td className="p-4 text-slate-600">{r.habitacion}</td>
-                    <td className="p-4">
-                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-800">
-                        {r.estado}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center">
-                      <button 
-                          onClick={() => setResidenteHistorial(r)} 
-                          className="px-3 py-2 bg-amber-100 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-200 transition-colors mr-2"
+
+            {residentesFiltrados.length === 0 ? (
+              <p className="text-slate-500 italic">No se encontraron residentes.</p>
+            ) : (
+              <>
+                <div className="space-y-4 sm:hidden">
+                  {residentesFiltrados.map(r => (
+                    <div key={r._id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-base font-semibold text-slate-900">{r.nombre} {r.apellido}</p>
+                          <p className="text-sm text-slate-600">Habitación {r.habitacion || 'N/A'}</p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                          {r.estado}
+                        </span>
+                      </div>
+                      <div className="mt-4 grid gap-2">
+                        <button
+                          onClick={() => setResidenteHistorial(r)}
+                          className="w-full px-3 py-2 bg-amber-100 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-200 transition-colors"
                           title="Ver Historial"
-                      >
-                          ✏️
-                      </button>
-                      <button 
-                        onClick={() => descargarFichaPDF(r)} // 'r' es el residente de tu .map
-                        className="px-3 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
-                      >
-                        📄 Ficha PDF
-                      </button>
-                      <button onClick={() => setResidenteEnEdicion(r)} className="px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors mr-2">
-                        Ficha
-                      </button>
-                      {(rol === 'medico' || rol === 'admin') && (
-                        <button onClick={() => eliminarResidente(r._id)} className="px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors">
-                          Eliminar
+                        >
+                          ✏️ Ver Historial
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <button
+                          onClick={() => descargarFichaPDF(r)}
+                          className="w-full px-3 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                        >
+                          📄 Ficha PDF
+                        </button>
+                        <button
+                          onClick={() => setResidenteEnEdicion(r)}
+                          className="w-full px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors"
+                        >
+                          Ficha
+                        </button>
+                        {rol === 'admin' && (
+                          <button
+                            onClick={() => eliminarResidente(r._id)}
+                            className="w-full px-3 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="p-4 font-semibold text-slate-600">Nombre Completo</th>
+                        <th className="p-4 font-semibold text-slate-600">Habitación</th>
+                        <th className="p-4 font-semibold text-slate-600">Estado</th>
+                        <th className="p-4 font-semibold text-slate-600 text-center">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {residentesFiltrados.map(r => (
+                        <tr key={r._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                          <td className="p-4 font-medium text-slate-800">{r.nombre} {r.apellido}</td>
+                          <td className="p-4 text-slate-600">{r.habitacion || 'N/A'}</td>
+                          <td className="p-4 text-slate-600">{r.estado}</td>
+                          <td className="p-4 text-center space-x-2">
+                            <button
+                              onClick={() => setResidenteHistorial(r)}
+                              className="px-3 py-2 bg-amber-100 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-200 transition-colors"
+                              title="Ver Historial"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => descargarFichaPDF(r)}
+                              className="px-3 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                            >
+                              📄
+                            </button>
+                            <button
+                              onClick={() => setResidenteEnEdicion(r)}
+                              className="px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors"
+                            >
+                              Ficha
+                            </button>
+                            {rol === 'admin' && (
+                              <button
+                                onClick={() => eliminarResidente(r._id)}
+                                className="px-3 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
+                              >
+                                Eliminar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -462,66 +534,113 @@ const traerUsuarios = async () => {
       {/* GESTIÓN DE USUARIOS */}
       {mostrarUsuarios && (
         <div id="usuarios-seccion" className="animate-in fade-in duration-300">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-            <h4 className="text-2xl font-bold mb-6 text-slate-900">Gestión de Usuarios</h4>
-            
-            {/* FORMULARIO PARA AGREGAR USUARIO */}
-            <form onSubmit={manejarAgregarUsuario} className="mb-8 p-6 bg-slate-50 rounded-xl border border-slate-200">
-              <h5 className="text-lg font-semibold mb-4 text-slate-800">Agregar Nuevo Usuario</h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div><label className={labelClass}>Nombre</label><input className={inputClass} value={nuevoUsuario.nombre} onChange={(e) => setNuevoUsuario({...nuevoUsuario, nombre: e.target.value})} required /></div>
-                <div><label className={labelClass}>Usuario</label><input className={inputClass} value={nuevoUsuario.user} onChange={(e) => setNuevoUsuario({...nuevoUsuario, user: e.target.value})} required /></div>
-                <div><label className={labelClass}>Contraseña</label><input type="password" className={inputClass} value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} required /></div>
-                <div>
-                  <label className={labelClass}>Rol</label>
-                  <select className={inputClass} value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})} required>
-                    <option value="">Seleccionar rol</option>
-                    <option value="medico">Médico</option>
-                    <option value="asistente">Asistente</option>
-                    <option value="admin">Administrativo</option>
-                  </select>
-                </div>
+          <div className="bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <h4 className="text-xl sm:text-2xl font-bold text-slate-900">Gestión de Usuarios</h4>
+              <p className="text-sm text-slate-500">Administra cuentas y roles desde aquí</p>
+            </div>
+
+            <form onSubmit={manejarAgregarUsuario} className="mb-8 p-4 sm:p-6 bg-slate-50 rounded-xl border border-slate-200 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label className={labelClass}>Nombre</label>
+                <input className={inputClass} value={nuevoUsuario.nombre} onChange={(e) => setNuevoUsuario({...nuevoUsuario, nombre: e.target.value})} required />
               </div>
-              <button type="submit" className="mt-4 px-6 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors">
-                + Agregar Usuario
-              </button>
+              <div>
+                <label className={labelClass}>Usuario</label>
+                <input className={inputClass} value={nuevoUsuario.user} onChange={(e) => setNuevoUsuario({...nuevoUsuario, user: e.target.value})} required />
+              </div>
+              <div>
+                <label className={labelClass}>Contraseña</label>
+                <input type="password" className={inputClass} value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} required />
+              </div>
+              <div>
+                <label className={labelClass}>Rol</label>
+                <select className={inputClass} value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})} required>
+                  <option value="">Seleccionar rol</option>
+                  <option value="lickinesiologia">Lic. en Kinesiología</option>
+                  <option value="licterapiaocupacional">Lic. en Terapia Ocupacional</option>
+                  <option value="licpsicologia">Lic. en Psicología</option>
+                  <option value="lictrabajosocial">Lic. en Trabajo Social</option>
+                  <option value="licnutricion">Lic. en Nutrición</option>
+                  <option value="edfisica">Ed. Física</option>
+                  <option value="draclinica">Dra. Clínica</option>
+                  <option value="licenfermeria">Lic. en Enfermería</option>
+                  <option value="dragerontologa">Dra. Gerontóloga</option>
+                  <option value="enfermeroprofesional">Enfermero/a Profesional</option>
+                  <option value="medico">Médico</option>
+                  <option value="admin">Administrativo</option>
+                </select>
+              </div>
+              <div className="col-span-full sm:col-span-2 lg:col-span-4 flex justify-end">
+                <button type="submit" className="w-full sm:w-auto px-6 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors">
+                  + Agregar Usuario
+                </button>
+              </div>
             </form>
 
-            {/* LISTA DE USUARIOS */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="p-4 font-semibold text-slate-600">Nombre</th>
-                    <th className="p-4 font-semibold text-slate-600">Usuario</th>
-                    <th className="p-4 font-semibold text-slate-600">Rol</th>
-                    <th className="p-4 font-semibold text-slate-600 text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usuarios.map(u => (
-                    <tr key={u._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="p-4 font-medium text-slate-800">{u.nombre}</td>
-                      <td className="p-4 text-slate-600">{u.user}</td>
-                      <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          u.rol === 'medico' ? 'bg-blue-100 text-blue-800' :
-                          u.rol === 'asistente' ? 'bg-green-100 text-green-800' :
-                          'bg-purple-100 text-purple-800'
-                        }`}>
-                          {u.rol === 'asistente' ? 'ASISTENTE' : u.rol.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">
-                        <button onClick={() => eliminarUsuario(u._id)} className="px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors">
-                          Eliminar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {usuarios.length === 0 ? (
+              <p className="text-slate-500 italic">No hay usuarios registrados aún.</p>
+            ) : (
+              <>
+                <div className="space-y-4 sm:hidden">
+                  {usuarios.map(u => {
+                    const displayRol = traducirRol(u.rol);
+                    return (
+                      <div key={u._id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-base font-semibold text-slate-900">{u.nombre}</p>
+                            <p className="text-sm text-slate-600">{u.user}</p>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                            {displayRol}
+                          </span>
+                        </div>
+                        <div className="mt-4 grid gap-2">
+                          <button onClick={() => eliminarUsuario(u._id)} className="w-full px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors">
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[520px]">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="p-4 font-semibold text-slate-600">Nombre</th>
+                        <th className="p-4 font-semibold text-slate-600">Usuario</th>
+                        <th className="p-4 font-semibold text-slate-600">Rol</th>
+                        <th className="p-4 font-semibold text-slate-600 text-center">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usuarios.map(u => {
+                        const displayRol = u.rol?.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase()) || 'Sin rol';
+                        return (
+                          <tr key={u._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td className="p-4 font-medium text-slate-800">{u.nombre}</td>
+                            <td className="p-4 text-slate-600">{u.user}</td>
+                            <td className="p-4">
+                              <span className="px-3 py-1 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800">
+                                {displayRol}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <button onClick={() => eliminarUsuario(u._id)} className="px-4 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors">
+                                Eliminar
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -610,10 +729,10 @@ const traerUsuarios = async () => {
                                const categoriaReal = evo.categoria || evo.categroia || 'rutina';
                             const catNormalizada = categoriaReal?.toLowerCase().trim();
                             const etiquetaCategoria = {
-                                rutina: 'Rutina',
+                                rutina: 'Evolución',
                                 medicacion: 'Medicación',
                                 'medicación': 'Medicación',
-                                incidente: 'Incidente'
+                                incidente: 'Novedades'
                             }[catNormalizada] || categoriaReal;
 
                                 // Definimos los estilos usando los nombres normalizados
@@ -648,8 +767,8 @@ const traerUsuarios = async () => {
                         )}
                     </div>
 
-                {/* Formulario para agregar nota (SOLO MÉDICO) */}
-                {rol === 'medico' && (
+                {/* Formulario para agregar nota (MÉDICO/ADMIN) */}
+                {puedeAgregarNota && (
                     <div className="p-6 border-t border-slate-200 bg-white">
                         <h3 className="text-sm font-bold text-slate-600 mb-3">Agregar Evolución</h3>
                         <form onSubmit={guardarEvolucion} className="flex gap-3 items-start">
@@ -658,9 +777,9 @@ const traerUsuarios = async () => {
                                 value={nuevaNota.categoria} 
                                 onChange={e => setNuevaNota({...nuevaNota, categoria: e.target.value})}
                             >
-                                <option value="rutina">Rutina</option>
+                                <option value="rutina">Evolución</option>
                                 <option value="medicacion">Medicación</option>
-                                <option value="incidente">Incidente ⚠️</option>
+                                <option value="incidente">Novedades ⚠️</option>
                             </select>
                             <textarea 
                                 className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none resize-none h-12" 
@@ -678,7 +797,7 @@ const traerUsuarios = async () => {
         </div>
     )}
 
-    </div>
+  </div>
   );
 }
 

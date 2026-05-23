@@ -49,11 +49,13 @@ const Residente = mongoose.model('Residente', residenteSchema);
 const usuarioSchema = new mongoose.Schema({
     nombre: {type: String, required: true},
     user: {type: String, required: true, unique: true},
-    rol: {type: String, enum: ['medico', 'asistente', 'admin'], default: 'asistente', required: true},
+    rol: {type: String, enum: ['lickinesiologia', 'licterapiaocupacional', 'licpsicologia', 'lictrabajosocial', 'licnutricion', 'edfisica', 'draclinica', 'licenfermeria', 'dragerontologa', 'enfermeroprofesional', 'medico', 'admin'], default: 'licenfermeria', required: true},
     password: {type: String, required: true}
 });
 
 const Usuario = mongoose.model('Usuario', usuarioSchema);
+
+const rolesProfesionales = ['medico', 'admin', 'lickinesiologia', 'licterapiaocupacional', 'licpsicologia', 'lictrabajosocial', 'licnutricion', 'edfisica', 'draclinica', 'licenfermeria', 'dragerontologa', 'enfermeroprofesional'];
 
 // conexión a la base de datos y creación del primer admin
 mongoose.connect(MONGO_URI)
@@ -72,9 +74,9 @@ mongoose.connect(MONGO_URI)
             console.log('usuario admin por defecto creado');
         }
 
-        // compatibilidad: convertimos roles antiguos de enfermera a asistente
-        await Usuario.updateMany({ rol: 'enfermera' }, { rol: 'asistente' });
-        console.log('roles antiguos actualizados a asistente');
+        // compatibilidad: convertimos roles antiguos de enfermera y asistente a profesional
+        await Usuario.updateMany({ rol: { $in: ['enfermera', 'asistente'] } }, { rol: 'profesional' });
+        console.log('roles antiguos actualizados a profesional');
 
         // compatibilidad: renombramos categorías mal escritas en notas existentes
         const residentesConCategroia = await Residente.find({ 'evoluciones.categroia': { $exists: true } });
@@ -144,7 +146,8 @@ app.get('/api/residentes', verificarToken, async (req, res) => {
 
 //acá va la ruta para agregar evoluciones a la ficha de un residente, que solo el médico puede hacer
 app.post('/api/residentes/:id/evoluciones', verificarToken, async (req, res) => {
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Permitimos que cualquier rol profesional agregue evoluciones
+    if (!rolesProfesionales.includes(req.usuarioLogueado.rol)) {
         return res.status(403).json({ message: 'no tenés permiso' });
     }
 
@@ -177,7 +180,8 @@ app.post('/api/residentes/:id/evoluciones', verificarToken, async (req, res) => 
 
 // agregar un nuevo residente (solo admin/medico)
 app.post('/api/residentes', verificarToken, async (req, res) => {
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Solo admin y médico pueden agregar residentes
+    if (!['admin', 'medico'].includes(req.usuarioLogueado.rol)) {
         return res.status(403).json({ message: 'no tenés permiso' });
     }
 
@@ -194,7 +198,8 @@ app.post('/api/residentes', verificarToken, async (req, res) => {
 app.put('/api/residentes/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
 
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Permitimos que cualquier rol profesional modifique la ficha
+    if (!rolesProfesionales.includes(req.usuarioLogueado.rol)) {
         return res.status(403).json({ message: 'no tenés permiso' });
     }
 
@@ -210,7 +215,8 @@ app.put('/api/residentes/:id', verificarToken, async (req, res) => {
 app.delete('/api/residentes/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
 
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Solo admin y médico pueden eliminar residentes
+    if (!['admin', 'medico'].includes(req.usuarioLogueado.rol)) {
         return res.status(403).json({ message: 'solo el médico puede borrar' });
     }
 
@@ -227,7 +233,8 @@ app.delete('/api/residentes/:id', verificarToken, async (req, res) => {
 
 // paso 2: ver todos los usuarios registrados (solo para el panel del admin)
 app.get('/api/usuarios', verificarToken, async (req, res) => {
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Solo los que tengan rol admin pueden ver los usuarios
+    if (req.usuarioLogueado.rol !== 'admin') {
         return res.status(403).json({ message: 'no tenés permiso' });
     }
 
@@ -242,17 +249,16 @@ app.get('/api/usuarios', verificarToken, async (req, res) => {
 
 // agregar un usuario nuevo al sistema
 app.post('/api/usuarios', verificarToken, async (req, res) => {
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Solo admin puede crear nuevos usuarios
+    if (req.usuarioLogueado.rol !== 'admin') {
         return res.status(403).json({ message: 'no tenés permiso' });
     }
 
+    let datosUsuario = null;
     try {
         console.log('POST /api/usuarios body:', req.body);
-        const datosUsuario = {
-            ...req.body,
-            rol: req.body.rol === 'administrativo' ? 'admin' :
-                 req.body.rol === 'enfermera' ? 'asistente' :
-                 req.body.rol
+        datosUsuario = {
+            ...req.body
         };
         console.log('datosUsuario para guardar:', datosUsuario);
 
@@ -281,7 +287,8 @@ app.post('/api/usuarios', verificarToken, async (req, res) => {
 
 // eliminar a un usuario/enfermero que ya no trabaje en el geriátrico
 app.delete('/api/usuarios/:id', verificarToken, async (req, res) => {
-    if (req.usuarioLogueado.rol !== 'medico' && req.usuarioLogueado.rol !== 'admin') {
+    // Solo admin puede eliminar usuarios
+    if (req.usuarioLogueado.rol !== 'admin') {
         return res.status(403).json({ message: 'no tenés permiso' });
     }
 
@@ -318,12 +325,10 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: 'usuario o contraseña incorrectos' });
         }
 
-        const rolFinal = usuarioEncontrado.rol === 'enfermera' ? 'asistente' : usuarioEncontrado.rol;
-
         // generar el token si todo está bien
         const token = jwt.sign({
             id: usuarioEncontrado._id,
-            rol: rolFinal,
+            rol: usuarioEncontrado.rol,
             nombre: usuarioEncontrado.nombre
         }, 
         SECRET_KEY, 
@@ -332,7 +337,7 @@ app.post('/api/login', async (req, res) => {
         res.json({
             message: 'login exitoso', 
             token, 
-            rol: rolFinal
+            rol: usuarioEncontrado.rol
         });
     } catch (error) {
         res.status(500).json({ message: 'error en el servidor al intentar iniciar sesión' });
