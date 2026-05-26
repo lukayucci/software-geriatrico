@@ -337,7 +337,7 @@ const traerUsuarios = async () => {
     'edfisica': 'Ed. Física',
     'draclinica': 'Dra. Clínica',
     'licenfermeria': 'Lic. Enfermería',
-    'dragerontologa': 'Dra. Gerontóloga',
+    'dragerontologa': 'Directora Médica',
     'enfermeroprofesional': 'Enfermero/a Profesional',
     'medico': 'Médico',
     'admin': 'Administrativo'
@@ -577,7 +577,7 @@ const traerUsuarios = async () => {
                   <option value="edfisica">Ed. Física</option>
                   <option value="draclinica">Dra. Clínica</option>
                   <option value="licenfermeria">Lic. en Enfermería</option>
-                  <option value="dragerontologa">Dra. Gerontóloga</option>
+                  <option value="dragerontologa">Directora Médica</option>
                   <option value="enfermeroprofesional">Enfermero/a Profesional</option>
                   <option value="medico">Médico</option>
                   <option value="admin">Administrativo</option>
