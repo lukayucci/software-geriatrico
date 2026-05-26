@@ -74,7 +74,18 @@ function Dashboard() {
   const manejarAgregar = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://software-geriatrico-production.up.railway.app/api/residentes', nuevoResidente, {
+      const body = {
+        ...nuevoResidente,
+        factoresRiesgo: typeof nuevoResidente.factoresRiesgo === 'string'
+          ? nuevoResidente.factoresRiesgo.split(',').map(item => item.trim()).filter(Boolean)
+          : nuevoResidente.factoresRiesgo,
+        dni: nuevoResidente.dni === '' ? undefined : Number(nuevoResidente.dni),
+        edad: nuevoResidente.edad === '' ? undefined : Number(nuevoResidente.edad),
+        habitacion: nuevoResidente.habitacion === '' ? undefined : Number(nuevoResidente.habitacion),
+        numAfiliado: nuevoResidente.numAfiliado === '' ? undefined : Number(nuevoResidente.numAfiliado)
+      };
+
+      const res = await axios.post('https://software-geriatrico-production.up.railway.app/api/residentes', body, {
         headers: { 'authorization': token }
       });
 
@@ -94,8 +105,8 @@ function Dashboard() {
         alert('Residente agregado correctamente.');
       }
     } catch (err) {
-      console.error("Error al agregar residente:", err);
-      alert('Error al agregar residente');
+      console.error("Error al agregar residente:", err.response?.data || err);
+      alert('Error al agregar residente: ' + (err.response?.data?.message || err.message || 'error desconocido'));
     }
   };
 
