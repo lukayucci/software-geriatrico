@@ -329,14 +329,14 @@ const traerUsuarios = async () => {
 
   const traducirRol = (rol) => {
   const diccionario = {
-    'lickinesiologia': 'Lic. en Kinesiología',
-    'licterapiaocupacional': 'Lic. en Terapia Ocupacional',
-    'licpsicologia': 'Lic. en Psicología',
-    'lictrabajo-social': 'Lic. en Trabajo Social',
-    'licnutricion': 'Lic. en Nutrición',
+    'lickinesiologia': 'Lic. Kinesiología',
+    'licterapiaocupacional': 'Lic. Terapia Ocupacional',
+    'licpsicologia': 'Lic. Psicología',
+    'lictrabajosocial': 'Lic. Trabajo Social',
+    'licnutricion': 'Lic. Nutrición',
     'edfisica': 'Ed. Física',
     'draclinica': 'Dra. Clínica',
-    'licenfermeria': 'Lic. en Enfermería',
+    'licenfermeria': 'Lic. Enfermería',
     'dragerontologa': 'Dra. Gerontóloga',
     'enfermeroprofesional': 'Enfermero/a Profesional',
     'medico': 'Médico',
@@ -389,9 +389,10 @@ const traerUsuarios = async () => {
             <div><label className={labelClass}>Habitación</label><input className={inputClass} value={nuevoResidente.habitacion} onChange={(e) => setNuevoResidente({...nuevoResidente, habitacion: e.target.value})} /></div>
             <div><label className={labelClass}>Fecha de Ingreso</label><input type="date" className={inputClass} value={nuevoResidente.fechaIngreso} onChange={(e) => setNuevoResidente({...nuevoResidente, fechaIngreso: e.target.value})} /></div>
             <div><label className={labelClass}>Obra Social</label><input className={inputClass} value={nuevoResidente.obraSocial} onChange={(e) => setNuevoResidente({...nuevoResidente, obraSocial: e.target.value})} /></div>
+            <div className="col-span-full md:col-span-1"><label className={labelClass}>Tel. Emergencia</label><input className={inputClass} value={nuevoResidente.telEmergencia} onChange={(e) => setNuevoResidente({...nuevoResidente, telEmergencia: e.target.value})} /></div>
             <div><label className={labelClass}>N° Afiliado</label><input className={inputClass} value={nuevoResidente.numAfiliado} onChange={(e) => setNuevoResidente({...nuevoResidente, numAfiliado: e.target.value})} /></div>
             <div><label className={labelClass}>Médico Cabecera</label><input className={inputClass} value={nuevoResidente.medicoCabecera} onChange={(e) => setNuevoResidente({...nuevoResidente, medicoCabecera: e.target.value})} /></div>
-            <div><label className={labelClass}>Hospital Capitado</label><input className={inputClass} value={nuevoResidente.hospitalCapitado} onChange={(e) => setNuevoResidente({...nuevoResidente, hospitalCapitado: e.target.value})} /></div>
+            <div><label className={labelClass}>Hospital de Capita</label><input className={inputClass} value={nuevoResidente.hospitalCapitado} onChange={(e) => setNuevoResidente({...nuevoResidente, hospitalCapitado: e.target.value})} /></div>
             
             <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div><label className={labelClass}>Medicación</label><textarea className={`${inputClass} h-24 resize-none`} value={nuevoResidente.medicacion} onChange={(e) => setNuevoResidente({...nuevoResidente, medicacion: e.target.value})} /></div>
@@ -401,7 +402,7 @@ const traerUsuarios = async () => {
 
             {/* CONTACTOS */}
             <h4 className={`col-span-full mt-4 ${sectionTitleClass}`}>Contactos y Apoderados</h4>
-            <div className="col-span-full md:col-span-1"><label className={labelClass}>Tel. Emergencia</label><input className={inputClass} value={nuevoResidente.telEmergencia} onChange={(e) => setNuevoResidente({...nuevoResidente, telEmergencia: e.target.value})} /></div>
+            
             
             <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-200"><label className={labelClass}>1° Apoderado</label><input className={inputClass} placeholder="Nombre" value={nuevoResidente.primerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, primerApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Teléfono" value={nuevoResidente.telApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, telApoderado: e.target.value})} /><input className={`${inputClass} mt-2`} placeholder="Dirección" value={nuevoResidente.direccionPrimerApoderado} onChange={(e) => setNuevoResidente({...nuevoResidente, direccionPrimerApoderado: e.target.value})} /></div>
@@ -446,7 +447,7 @@ const traerUsuarios = async () => {
                     <div key={r._id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-base font-semibold text-slate-900">{r.nombre} {r.apellido}</p>
+                          <p className="text-base font-semibold text-slate-900">{r.apellido} {r.nombre}</p>
                           <p className="text-sm text-slate-600">Habitación {r.habitacion || 'N/A'}</p>
                         </div>
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
@@ -499,7 +500,7 @@ const traerUsuarios = async () => {
                     <tbody>
                       {residentesFiltrados.map(r => (
                         <tr key={r._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                          <td className="p-4 font-medium text-slate-800">{r.nombre} {r.apellido}</td>
+                          <td className="p-4 font-medium text-slate-800">{r.apellido} {r.nombre}</td>
                           <td className="p-4 text-slate-600">{r.habitacion || 'N/A'}</td>
                           <td className="p-4 text-slate-600">{r.estado}</td>
                           <td className="p-4 text-center space-x-2">
@@ -628,8 +629,8 @@ const traerUsuarios = async () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {usuarios.map(u => {
-                        const displayRol = u.rol?.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase()) || 'Sin rol';
+                        {usuarios.map(u => {
+                        const displayRol = traducirRol(u.rol);
                         return (
                           <tr key={u._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                             <td className="p-4 font-medium text-slate-800">{u.nombre}</td>
